@@ -22,19 +22,36 @@
 {% block body %}
     {# {% set pin_count = pins|length %}
     {{ pin_count }} #}
-    <li><a href="{{ path('app_home') }}">Home</a></li>
+    {# <li><a href="{{ path('app_home') }}">Home</a></li>
     <br>
-    <li><a href="{{ path('app_pin_create') }}">Create Pin</a></li>
+    <li><a href="{{ path('app_pin_create') }}">Create Pin</a></li> #}
 
-    {% for pin in pins %}
+    <div class = "container">
+        <div class = "row">
+            {% for pin in pins %}
+                <article class = "col-4">
+                       <h2><a href="{{ path('app_pin_show', {id: pin.id}) }}">{{ pin.title }} </a></h2> 
+                    <img src = {{ pin.imageName }} width="150" height="200">       
+                    <h5>{{ pin.description|u.truncate(10,'...',false) }}</h5> 
+                    <p>Submitted {{ pin.createdAt|ago }}</p>
+                    <p>By {{ pin.user.firstname ~" "~ pin.user.lastname }}</p>
+                </article>
+            {% else %}
+                <p> Sorry, no pin yet </p>
+            {% endfor %}
+        </div>
+    </div>
+
+    {# {% for pin in pins %}
         <article>
                {# <h1>{{ pin.getTitle() }}</h1>   #}
-               <h2><a href="{{ path('app_pin_show', {id: pin.id}) }}">{{ pin.title }} </a></h2>  
-
+               {# <h2><a href="{{ path('app_pin_show', {id: pin.id}) }}">{{ pin.title }} </a></h2>  
+               <img src = {{ pin.imageName }} width="150" height="200">
                <p>{{ pin.description|u.truncate(10,'...',false) }}</p> 
                <p>Submitted {{ pin.createdAt|ago }}</p>
+               <p>By {{ pin.user.firstname ~" "~ pin.user.lastname}}</p>
         </article>
     {% else %}
         <p> Sorry, no pin yet </p>
-    {% endfor %}
+    {% endfor %} #} 
 {% endblock %}

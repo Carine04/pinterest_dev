@@ -48,24 +48,41 @@ class PinController extends AbstractController
         // $em->persist($pin4);
         // $em->persist($pin5);
         // // $em->flush(); 
-         
+        if ($this->getUser()){
+            if (!$this->getUser()->isVerified()){
+                $this->addFlash('info', 'Your email address is not verified.');
+            }  
+        } 
         
         return $this->render('pin/index.html.twig', ['pins' => $repo->findAll()]);
     }
 
     #[Route('/pin/{id<[0-9]+>}', name:'app_pin_show', methods:'GET')]
     public function show(Pin $pin): Response
-    {
+    { 
         return $this->render('pin/show.html.twig', compact('pin'));
     }
 
     #[Route('/pin/create', name:'app_pin_create', methods: ['GET', 'POST'])]
     public function create(Request $request, EntityManagerInterface $em): Response
     {
+        if($this->getUser()){
+
+            if ($this->getUser()->isVerified() == false) {
+                $this->addFlash('error', 'You must confirm your email to create Pin!');
+                return $this->redirectToRoute('app_home');
+            }
+        }else{
+            $this->addFlash('error', 'You must register to create Pin!');
+            return $this->redirectToRoute('app_login');
+        }
+
+        
         $pin = new Pin;
         $form = $this->createForm(PinType::class, $pin);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $pin->setUser($this->getUser());
             $em->persist($pin);
             $em->flush();
             $this->addFlash('success', 'Pin successfully created !'); 
@@ -77,6 +94,18 @@ class PinController extends AbstractController
    #[Route('/pin/{id<[0-9]+>}/edit', name:'app_pin_edit', methods: ['GET', 'POST'])] 
    public function edit(Request $request, Pin $pin, EntityManagerInterface $em): Response
     {
+       if ($this->getUser()){
+            if ($this->getUser()->isVerified() == false) {
+                $this->addFlash('error', 'You must confirm your email to edit Pin!');
+                return $this->redirectToRoute('app_home');
+            }else if ($pin->getUser()->getEmail() !== $this->getUser()->getEmail()){
+                $this->addFlash('error', 'You must to be the user '. $pin->getUser()->getFirstname() . ' to edit Pin !');
+                return $this->redirectToRoute('app_home');
+            } 
+        }else{
+            $this->addFlash('error', 'You must login to edit Pin!');
+            return $this->redirectToRoute('app_login');
+        }
         $form = $this->createForm(PinType::class, $pin);
         $form->handleRequest($request);
         
@@ -95,6 +124,18 @@ class PinController extends AbstractController
     #[Route('/pin/{id<[0-9]+>}/delete', name:'app_pin_delete')] 
     public function delete(Pin $pin, EntityManagerInterface $em): Response
     {
+        if ($this->getUser()){
+            if ($this->getUser()->isVerified() == false) {
+                $this->addFlash('error', 'You must confirm your email to delete Pin!');
+                return $this->redirectToRoute('app_home');
+            }else if ($pin->getUser()->getEmail() !== $this->getUser()->getEmail()){
+                $this->addFlash('error', 'You must to be the user '. $pin->getUser()->getFirstname() . ' to delete Pin !');
+                return $this->redirectToRoute('app_home');
+            } 
+        }else{
+            $this->addFlash('error', 'You must login to delete Pin!');
+            return $this->redirectToRoute('app_login');
+        }
         $em->remove($pin);
         $em->flush();
         $this->addFlash('info', 'Pin successuly deleted!');

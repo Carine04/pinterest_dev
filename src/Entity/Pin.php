@@ -2,30 +2,44 @@
 
 namespace App\Entity;
 
+use App\Entity\Traits\Timestampable;
 use App\Repository\PinRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+
+use ApiPlatform\Core\Annotation\ApiResource;
 
 #[ORM\Entity(repositoryClass: PinRepository::class)]
 #[ORM\Table(name:"pins")]
 #[ORM\HasLifecycleCallbacks]
+#[ApiResource()]
 class Pin
 {
+    use Timestampable;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private $id;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(message:"Votre champs ne peut pas être vide")]
+    #[Assert\Length(min:3, minMessage:'Vous devez avoir un titre de minimum {{ limit }} caractères ! ')]
     private $title;
 
     #[ORM\Column(type: 'text')]
+    #[Assert\NotBlank(message:"Votre champs ne peut pas être vide")]
+    #[Assert\Length(min:10, minMessage:'Vous devez avoir une description de minimum {{ limit }} caractères ! ')]
     private $description;
 
-    #[ORM\Column(type: 'datetime' , options:['default'=>'CURRENT_TIMESTAMP'])]
-    private $createdAt;
+   
 
-    #[ORM\Column(type: 'datetime' , options:['default'=>'CURRENT_TIMESTAMP'])]
-    private $updateAt;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private $imageName = 
+    "https://upload.wikimedia.org/wikipedia/commons/a/ac/No_image_available.svg";
+
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'pins')]
+    #[ORM\JoinColumn(nullable: false)]
+    private $user;
 
     public function getId(): ?int
     {
@@ -37,7 +51,7 @@ class Pin
         return $this->title;
     }
 
-    public function setTitle(string $title): self
+    public function setTitle(?string $title): self
     {
         $this->title = $title;
 
@@ -49,43 +63,34 @@ class Pin
         return $this->description;
     }
 
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
 
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getImageName(): ?string
     {
-        return $this->createdAt;
+        return $this->imageName;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): self
+    public function setImageName(?string $imageName): self
     {
-        $this->createdAt = $createdAt;
+        $this->imageName = $imageName;
 
         return $this;
     }
 
-    public function getUpdateAt(): ?\DateTimeInterface
+    public function getUser(): ?User
     {
-        return $this->updateAt;
+        return $this->user;
     }
 
-    public function setUpdateAt(\DateTimeInterface $updateAt): self
+    public function setUser(?User $user): self
     {
-        $this->updateAt = $updateAt;
+        $this->user = $user;
 
         return $this;
-    }
-    #[ORM\PrePersist] 
-    #[ORM\PreUpdate]
-    public function updateTimestamps()
-    {
-        if ($this->getCreatedAt() === null) {
-            $this->setCreatedAt(new \DateTimeImmutable);
-        }
-        $this->setUpdateAt(new \DateTimeImmutable);
     } 
 }
